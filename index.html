@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinnamon Feedback Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .form-content {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus, .form-textarea:focus {
+            border-color: #4f46e5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: 350px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .toast.success {
+            background: #10b981;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .overlay-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .overlay.show .overlay-content {
+            transform: scale(1);
+        }
+        
+        .overlay-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .overlay-icon.sending {
+            color: #4f46e5;
+            animation: spin 1s linear infinite;
+        }
+        
+        .overlay-icon.success {
+            color: #10b981;
+        }
+        
+        .overlay-icon.error {
+            color: #ef4444;
+        }
+        
+        .overlay-message {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        
+        .overlay-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .overlay-btn:hover {
+            background: #4338ca;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+            .form-container {
+                max-width: 100%;
+            }
+            
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="text-2xl font-bold"><i class="fas fa-comment-dots mr-2"></i>Cinnamon Feedback</h1>
+            <p class="opacity-90 mt-1">We'd love to hear from you!</p>
+        </div>
+        
+        <div class="form-content">
+            <form id="feedbackForm" class="space-y-4">
+                <div class="form-group">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" id="name" name="name" required class="form-input" placeholder="Your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback" class="form-label">Feedback</label>
+                    <textarea id="feedback" name="feedback" required class="form-textarea" placeholder="Share your experience with us..."></textarea>
+                </div>
+                
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Feedback
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="overlay-content">
+            <div id="overlayIcon" class="overlay-icon sending">
+                <i class="fas fa-circle-notch"></i>
+            </div>
+            <div id="overlayMessage" class="overlay-message">Sending your feedback...</div>
+            <button id="overlayBtn" class="overlay-btn" style="display: none;">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'error' ? 'exclamation-circle' : 'check-circle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function showOverlay(message, iconType = 'sending') {
+            const overlay = document.getElementById('overlay');
+            const overlayIcon = document.getElementById('overlayIcon');
+            const overlayMessage = document.getElementById('overlayMessage');
+            const overlayBtn = document.getElementById('overlayBtn');
+            
+            // Set icon based on type
+            overlayIcon.className = 'overlay-icon ' + iconType;
+            
+            if (iconType === 'sending') {
+                overlayIcon.innerHTML = '<i class="fas fa-circle-notch"></i>';
+            } else if (iconType === 'success') {
+                overlayIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else if (iconType === 'error') {
+                overlayIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            }
+            
+            overlayMessage.textContent = message;
+            
+            // Show/hide button based on type
+            if (iconType === 'sending') {
+                overlayBtn.style.display = 'none';
+            } else {
+                overlayBtn.style.display = 'inline-block';
+            }
+            
+            overlay.classList.add('show');
+        }
+
+        function hideOverlay() {
+            const overlay = document.getElementById('overlay');
+            overlay.classList.remove('show');
+        }
+
+        document.getElementById('overlayBtn').addEventListener('click', hideOverlay);
+
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            
+            // Add loading state to button
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
+            
+            showOverlay('Sending your feedback...', 'sending');
+
+            const formData = new FormData(this);
+            
+            // Simulate API call with timeout for demo purposes
+            setTimeout(() => {
+                fetch('https://script.google.com/macros/s/AKfycbwQAk_n8POtPq8bjpmU_8wKfX73ZEkHEDF0qoA-wpl4K4Sy6ofaZvkbIzt3sXdySe1W/exec', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    if (text === 'Success') {
+                        showOverlay('Thank you for your feedback!', 'success');
+                        this.reset();
+                    } else {
+                        throw new Error(text || 'Unexpected server response');
+                    }
+                })
+                .catch(error => {
+                    showOverlay(`Error: ${error.message}`, 'error');
+                    showToast(`Error submitting feedback: ${error.message}`, 'error');
+                    console.error('Submission Error:', error);
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+                });
+            }, 1500); // Simulated delay for demo
+        });
+    </script>
+</body>
+</html>
